@@ -13,8 +13,11 @@ dist
 dist-ssr
 coverage
 *.locasrcl
+.env
 
 json/
+csv/
+key/
 /cypress/videos/
 /cypress/screenshots/
 
