@@ -41,17 +41,20 @@ const { Translate } = require('@google-cloud/translate').v2;
 // Creates a client
 const translate = new Translate();
 
-
 //  google api v2는 한 번에 128세그먼트까지 요청을 받는다
 //  resourceSet의 길이가 128 초과인 경우, 분할해 요청할 필요 있음 
 
-
 const text = resourceSet;
-const textBuff = text;
+let textBuff = [];
+
+//  깊은 복사
+text.forEach(item => {
+  textBuff.push(item);
+});
+
 let bigText = [];
 
-
-console.log('text', textBuff)
+console.log('text', textBuff);
 
 const target1 = 'en';
 const target2 = 'zh';
@@ -75,7 +78,7 @@ async function translateEn() {
 
   let [translations] = await translate.translate(bigText, target1);
   translations = Array.isArray(translations) ? translations : [translations];
-  console.log('en Translations:');
+  // console.log('en Translations:');
   translations.forEach((translation, i) => {
     console.log(`${i}, ${bigText[i]} => (${target1}) ${translation}`);
     enTranslated.push(translations[i]);
@@ -86,7 +89,7 @@ async function translateEn() {
 async function translateZh() {
   let [translations] = await translate.translate(bigText, target2);
   translations = Array.isArray(translations) ? translations : [translations];
-  console.log('zh Translations:');
+  // console.log('zh Translations:');
   translations.forEach((translation, i) => {
     console.log(`${i}, ${bigText[i]} => (${target2}) ${translation}`);
     zhTranslated.push(translations[i]);
@@ -99,24 +102,25 @@ async function translateZh() {
 };
 
 function fileWriter() {
+  console.log('t.lgth', text.length);
   console.log('file writing');
   let enStringSum = '';
   resource.forEach(item => {
     // console.log('item', item);
-    let idx = resource.findIndex((textItem) => textItem === item);
+    let idx = text.findIndex((textItem) => textItem === item);
     // stringSum += text[idx] + '\t' + enTranslated[idx] + '\t' + zhTranslated[idx] + '\n';
-    if (resource.length === idx + 1) {
-      enStringSum += enTranslated[idx];
-    } else {
+
+      // enStringSum += enTranslated[idx];
+
       enStringSum += enTranslated[idx] + '\n';
-    }
+
     fs.writeFileSync(enResultPath, enStringSum)
   })
 
   let zhStringSum = '';
   resource.forEach(item => {
     // console.log('item', item);
-    let idx = resource.findIndex((textItem) => textItem === item);
+    let idx = text.findIndex((textItem) => textItem === item);
     // stringSum += text[idx] + '\t' + enTranslated[idx] + '\t' + zhTranslated[idx] + '\n';
     if (resource.length === idx + 1) {
       zhStringSum += zhTranslated[idx];
