@@ -16,6 +16,7 @@ coverage
 .env
 
 json/
+resource/
 result/
 key/
 /cypress/videos/

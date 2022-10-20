@@ -6,12 +6,14 @@ const fs = require("fs");
 const { join } = require('path');
 
 const RESOURCE_FILE_NAME = "convert01.tsv";
-const resourcePath = path.join(__dirname, '..', 'Express/result', RESOURCE_FILE_NAME);
+const resourcePath = path.join(__dirname, '..', 'Express/resource', RESOURCE_FILE_NAME);
 
 const EN_RESULT_NAME = "en-multilingualResource.tsv";
 const enResultPath = path.join(__dirname, '..', 'Express/result', EN_RESULT_NAME);
-const ZH_RESULT_NAME = "zh-multilingualResource.tsv";
-const zhResultPath = path.join(__dirname, '..', 'Express/result', ZH_RESULT_NAME);
+const CN_RESULT_NAME = "cn-multilingualResource.tsv";
+const cnResultPath = path.join(__dirname, '..', 'Express/result', CN_RESULT_NAME);
+const TW_RESULT_NAME = "tw-multilingualResource.tsv";
+const twResultPath = path.join(__dirname, '..', 'Express/result', TW_RESULT_NAME);
 // console.log(csvPath);
 
 const csv = fs.readFileSync(resourcePath, "utf-8");
@@ -57,9 +59,11 @@ let bigText = [];
 console.log('text', textBuff);
 
 const target1 = 'en';
-const target2 = 'zh';
+const target2 = 'zh-CN';
+const target3 = 'zh-TW';
 const enTranslated = [];
-const zhTranslated = [];
+const cnTranslated = [];
+const twTranslated = [];
 
 async function translateEn() {
   bigText = [];
@@ -83,16 +87,27 @@ async function translateEn() {
     console.log(`${i}, ${bigText[i]} => (${target1}) ${translation}`);
     enTranslated.push(translations[i]);
   });
-  translateZh();
+  translateCn();
 }translateEn();
 
-async function translateZh() {
+async function translateCn() {
   let [translations] = await translate.translate(bigText, target2);
   translations = Array.isArray(translations) ? translations : [translations];
   // console.log('zh Translations:');
   translations.forEach((translation, i) => {
     console.log(`${i}, ${bigText[i]} => (${target2}) ${translation}`);
-    zhTranslated.push(translations[i]);
+    cnTranslated.push(translations[i]);
+  });
+  translateTw();
+};
+
+async function translateTw() {
+  let [translations] = await translate.translate(bigText, target3);
+  translations = Array.isArray(translations) ? translations : [translations];
+  // console.log('zh Translations:');
+  translations.forEach((translation, i) => {
+    console.log(`${i}, ${bigText[i]} => (${target3}) ${translation}`);
+    twTranslated.push(translations[i]);
   });
   if (textBuff.length === 0) {
     fileWriter();
@@ -109,25 +124,34 @@ function fileWriter() {
     // console.log('item', item);
     let idx = text.findIndex((textItem) => textItem === item);
     // stringSum += text[idx] + '\t' + enTranslated[idx] + '\t' + zhTranslated[idx] + '\n';
-
-      // enStringSum += enTranslated[idx];
-
+    if (resource.length === idx + 1) {
+      enStringSum += enTranslated[idx];
+    } else {
       enStringSum += enTranslated[idx] + '\n';
-
+    }
     fs.writeFileSync(enResultPath, enStringSum)
   })
 
-  let zhStringSum = '';
+  let cnStringSum = '';
   resource.forEach(item => {
-    // console.log('item', item);
     let idx = text.findIndex((textItem) => textItem === item);
-    // stringSum += text[idx] + '\t' + enTranslated[idx] + '\t' + zhTranslated[idx] + '\n';
     if (resource.length === idx + 1) {
-      zhStringSum += zhTranslated[idx];
+      cnStringSum += cnTranslated[idx];
     } else {
-      zhStringSum += zhTranslated[idx] + '\n';
+      cnStringSum += cnTranslated[idx] + '\n';
     }
-    fs.writeFileSync(zhResultPath, zhStringSum)
+    fs.writeFileSync(cnResultPath, cnStringSum)
+  })
+
+  let twStringSum = '';
+  resource.forEach(item => {
+    let idx = text.findIndex((textItem) => textItem === item);
+    if (resource.length === idx + 1) {
+      twStringSum += twTranslated[idx];
+    } else {
+      twStringSum += twTranslated[idx] + '\n';
+    }
+    fs.writeFileSync(twResultPath, twStringSum)
   })
 
   console.log('success!');
