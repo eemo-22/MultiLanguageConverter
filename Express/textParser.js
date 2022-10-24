@@ -1,6 +1,8 @@
 //  SPA 웹에서는 html을 파싱할 수 없으므로
 //  JS의 컨텐츠 로딩을 기다릴 수 있는 puppeteer 라이브러리 이용
 
+//  정규식 이용해서 소스의 html상에서 직접 텍스트 추출하셈
+
 (async () => {
   const puppeteer = require('puppeteer');
 

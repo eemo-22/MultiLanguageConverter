@@ -11,11 +11,11 @@ app.listen(port, () => {
   console.log(`Translation app listening on port ${port}`);
 })
 
-const path = require("path");
-const fs = require("fs");
-const FILE_NAME = "natooLang.csv";
-const csvPath = path.join(__dirname, '..', 'Express/csv', FILE_NAME);
-const csv = fs.readFileSync(csvPath, "utf-8");
+// const path = require("path");
+// const fs = require("fs");
+// const FILE_NAME = "natooLang.csv";
+// const csvPath = path.join(__dirname, '..', 'Express/csv', FILE_NAME);
+// const csv = fs.readFileSync(csvPath, "utf-8");
 
 // const translateRouter = require("./routes/translateRouter");
 
