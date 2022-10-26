@@ -9,19 +9,21 @@ const { Translate } = require('@google-cloud/translate').v2;
 // Creates a client
 const translate = new Translate();
 
+let i = 0;
 let text = [];
 let targetItem = {};
 let tempKeys = [];
 let tempText = [];
-let translationContainer = [];
+let nullContainer = [];
+let result = [];
 const target = 'en';
 
 const nullReplacer = 'NLLNAUTOO';
-const spaceReplacer = 'NSAPTAOCOE';
 
 axios.get('https://t.admin.natoo.co/api/hospital_detail/',
   {
     params: {
+      // hospital_id: 123162,
       language: 'ko',
       rows: 10000
     },
@@ -37,13 +39,11 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         if (hospital[idx] === null) {
           hospital[idx] = nullReplacer;
         }
-        if (hospital[idx] === '') {
-          hospital[idx] = spaceReplacer;
-        }
       }
       // console.log(hospital);
 
       targetItem = {
+        hospital_id: hospital.hospital_id,
         name: hospital.name,
         ceo_name: hospital.ceo_name,
         address: hospital.address,
@@ -60,66 +60,48 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
       text.push(tempText);
 
     })
-    // console.log(text);
+    console.log('text', text);
 
     text.forEach(element => {
       async function translateText() {
         let [translations] = await translate.translate(element, target);
+        console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
-        translations.forEach((translation, i) => {
+        translations.forEach(translation => {
           if (translation == 'NLLNAUTOO') {
             translation = null;
-            // translations.splice(translation);
-            
-            //  여기서 지금 그냥 push 하니까, 디버그 보니까 뒤로 붙어서 길이 9 넘는 그냥 배열 늘어남
-            //  splice로 자기 자리 치환하도록 할 생각 하고 있음
-            //  아니면 나중에 result 객체에서 처리해도 되는데...
           }
-          if (translation == 'NSAPTAOCOE') {
-            translation = '';
-            translations.push(translation);
-          }
+          nullContainer.push(translation);
         })
-        console.log('Translations:', translations);
+
+        console.log('nullContainer: ', nullContainer);
+
 
         //  key - value 형성
-        let i = 0;
-        const result = tempKeys.reduce((acc, curr) => (acc[curr] = translations[i++], acc), {});
+        result = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainer[i++], acc), {});
         
-
-        //  result 객체에서 모든 이스케이프 처리 시 코드가 엄청나게 될 것
-        //  상단에서 배열 조절 해보고 안되면 여기에서 ㄱ
-
-        // if (result.ceo_name === 'NLLNAUTOO') {
-        //   result.ceo_name = null;
-        // }
-        // else if (result.ceo_name = 'NSAPTAOCOE') {
-        //   result.ceo_name = '';
-        // }
-
+        result['language'] = 'en';
         console.log('result: ', result);
-        
+
         //  value 에서 null, '' 이스케이프 복구
 
-        //  save
-        // await axios.post('https://t.admin.natoo.co/api/hospital_detail/save', {
-        //   data: {
-        //     name: result.name,
-        //     ceo_name: result.ceo_name,
-        //     address: result.address,
-        //     address_detail: result.address_detail,
-        //     location_step1: result.location_step1,
-        //     location_step2_1: result.location_step2_1,
-        //     location_step2_2: result.location_step2_2,
-        //     subway1: result.subway1,
-        //     subway2: result.subway2,
-        //   },
-        //   header: {
-        //     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        //     'Authorization': `Bearer ${process.env.BEARER_TOKEN}`
-        //   }
-        // });
+        //  save - en
+          axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+            result,
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Authorization': `Bearer ${process.env.BEARER_TOKEN}`
+              },
+              withCredentials: false,
+            })
+            .then(res => {
+              console.log('input res', res);
+            })
+            .catch(error => {
+              console.log(error);
+            })
 
       } translateText();
     })
