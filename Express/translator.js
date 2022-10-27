@@ -9,21 +9,34 @@ const { Translate } = require('@google-cloud/translate').v2;
 // Creates a client
 const translate = new Translate();
 
+//  counter
 let i = 0;
+let j = 0;
+let k = 0;
+
 let text = [];
 let targetItem = {};
 let tempKeys = [];
 let tempText = [];
-let nullContainer = [];
-let result = [];
-const target = 'en';
+
+let nullContainerEn = [];
+let nullContainerCn = [];
+let nullContainerTw = [];
+
+let resultEn = [];
+let resultCn = [];
+let resultTw = [];
+
+const target1 = 'en';
+const target2 = 'zh-CN';
+const target3 = 'zh-TW';
 
 const nullReplacer = 'NLLNAUTOO';
 
 axios.get('https://t.admin.natoo.co/api/hospital_detail/',
   {
     params: {
-      // hospital_id: 123162,
+      hospital_id: 123275,
       language: 'ko',
       rows: 10000
     },
@@ -32,8 +45,6 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
     }
   })
   .then(ko_hospitals => {
-    // console.log('res!!!!!', ko_hospitals.data.list);
-
     ko_hospitals.data.list.forEach(hospital => {
       for (const idx in hospital) {
         if (hospital[idx] === null) {
@@ -45,9 +56,11 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
       targetItem = {
         hospital_id: hospital.hospital_id,
         name: hospital.name,
+        intro_desc: hospital.intro_desc,
         ceo_name: hospital.ceo_name,
         address: hospital.address,
         address_detail: hospital.address_detail,
+        zip_no: hospital.zip_no,
         location_step1: hospital.location_step1,
         location_step2_1: hospital.location_step2_1,
         location_step2_2: hospital.location_step2_2,
@@ -63,32 +76,28 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
     console.log('text', text);
 
     text.forEach(element => {
-      async function translateText() {
-        let [translations] = await translate.translate(element, target);
+      async function translateEn() {
+        let [translations] = await translate.translate(element, target1);
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
+        //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
           if (translation == 'NLLNAUTOO') {
             translation = null;
           }
-          nullContainer.push(translation);
+          nullContainerEn.push(translation);
         })
-
-        console.log('nullContainer: ', nullContainer);
-
+        console.log('nullContainerEn: ', nullContainerEn);
 
         //  key - value 형성
-        result = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainer[i++], acc), {});
-        
-        result['language'] = 'en';
-        console.log('result: ', result);
-
-        //  value 에서 null, '' 이스케이프 복구
+        resultEn = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerEn[i++], acc), {});
+        resultEn['language'] = 'en';
+        console.log('resultEn: ', resultEn);
 
         //  save - en
-          axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
-            result,
+          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+            resultEn,
             {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -102,8 +111,82 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
             .catch(error => {
               console.log(error);
             })
+          translateCn()
+      } translateEn();
 
-      } translateText();
+      async function translateCn() {
+        let [translations] = await translate.translate(element, target2);
+        console.log('Translations:', translations);
+        translations = Array.isArray(translations) ? translations : [translations];
+
+        //  value 에서 null 이스케이프 복구
+        translations.forEach(translation => {
+          if (translation == 'NLLNAUTO') {
+            translation = null;
+          }
+          nullContainerCn.push(translation);
+        })
+        console.log('nullContainerCn: ', nullContainerCn);
+
+        //  key - value 형성
+        resultCn = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerCn[j++], acc), {});
+        resultCn['language'] = 'cn';
+        console.log('resultCn: ', resultCn);
+
+        //  save - cn
+          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+            resultCn,
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Authorization': `Bearer ${process.env.BEARER_TOKEN}`
+              },
+              withCredentials: false,
+            })
+            .then(res => {
+              console.log('input res', res);
+            })
+            .catch(error => {
+              console.log(error);
+            })
+          translateTw();
+      };
+      async function translateTw() {
+        let [translations] = await translate.translate(element, target3);
+        console.log('Translations:', translations);
+        translations = Array.isArray(translations) ? translations : [translations];
+
+        //  value 에서 null 이스케이프 복구
+        translations.forEach(translation => {
+          if (translation == 'NLLNAUTO') {
+            translation = null;
+          }
+          nullContainerTw.push(translation);
+        })
+        console.log('nullContainerCn: ', nullContainerTw);
+
+        //  key - value 형성
+        resultTw = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerTw[k++], acc), {});
+        resultTw['language'] = 'tw';
+        console.log('resultTw: ', resultTw);
+
+        //  save - tw
+          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+            resultTw,
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Authorization': `Bearer ${process.env.BEARER_TOKEN}`
+              },
+              withCredentials: false,
+            })
+            .then(res => {
+              console.log('input res', res);
+            })
+            .catch(error => {
+              console.log(error);
+            })
+      };
     })
     console.log('success!');
   })
