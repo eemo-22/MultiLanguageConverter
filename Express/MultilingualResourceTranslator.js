@@ -102,6 +102,15 @@ async function translateCn() {
 };
 
 async function translateTw() {
+  
+  //  구글 API는 두 번째 인수로 시작, 도착 언어 코드를 포함하는 옵션 객체를 넘겨받는다.
+
+  // const options = {
+  //   from: 'zh-CN',
+  //   to: 'zh-TW'
+  // };
+  // let [translations] = await translate.translate(bigText, options);
+
   let [translations] = await translate.translate(bigText, target3);
   translations = Array.isArray(translations) ? translations : [translations];
   // console.log('zh Translations:');
