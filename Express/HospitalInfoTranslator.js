@@ -36,7 +36,7 @@ const nullReplacer = 'NLLNAUTOO';
 axios.get('https://t.admin.natoo.co/api/hospital_detail/',
   {
     params: {
-      hospital_id: 123275,
+      // hospital_id: 123275,
       language: 'ko',
       rows: 10000
     },
