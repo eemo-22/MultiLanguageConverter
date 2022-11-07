@@ -14,13 +14,13 @@
 </template>
 
 <script>
-import ForignerScenario from '../json/ForignerScenario.json';
+import resourceScenario from '../json/userToNatooScenario.json';
 export default {
   data() {
     return {
       gitple_scenario: '',
       containerObject: '',
-      container: [],
+      translateTargets: [],
 
       multiLanguage: [],
       jsonKey: [],
@@ -61,30 +61,35 @@ export default {
       e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
       a.dispatchEvent(e);
     },
+    removeDuplication (str, arr) {
+      if (arr.includes(str)) {
+        return;
+      } else {
+        arr.push(str);
+      }
+    },
     convertToObject() {
-      this.gitple_scenario = ForignerScenario;
+      // this.gitple_scenario = resourceScenario;
       let init = [];
       let counter = [];
 
-      let i = 0;
-      let keyIdx = 'message_' + ((i++).toString().padStart(4, '0'));
+      const resourceJson = structuredClone(resourceScenario);
 
-      this.gitple_scenario.graph.forEach(element => {
+      console.log('origin', resourceScenario);
+      console.log('clone', resourceJson);
+
+      resourceJson.graph.forEach(element => {
         init.push(element);
 
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
-            this.container.push(element.value._contents);
-            if (element.value._contents) {
-              element.value._contents = '${$lang.' + keyIdx + '}';
-            }
+            this.removeDuplication(element.value._contents, this.translateTargets);
           }
           
           if (element.value._items) { //  value.items[_contents] -> 2차
             element.value._items.forEach(item => {
               if (!item._contents == null || !item._contents == "") {
-                this.container.push(item._contents);
-                item._contents = '${$lang.' + keyIdx + '}';
+                this.removeDuplication(item._contents, this.translateTargets);
               }
             })
           }
@@ -93,22 +98,21 @@ export default {
         if (element.children) { //  children[value._contents] -> 2차
           element.children.forEach(child => {
             if (!child.value._contents == null || !child.value._contents == "") {
-              this.container.push(child.value._contents);
-              child.value._contents = '${$lang.' + keyIdx + '}';
+              this.removeDuplication(child.value._contents, this.translateTargets);
             }
           })
         }
       });
 
-      console.log('changed obj', this.gitple_scenario.graph); //  key로 _contents를 변환한 시나리오
-      console.log('values', this.container); //  key 매핑 위해 추출된 _contents: value
+      console.log('changed obj', resourceJson.graph); //  key로 _contents를 변환한 시나리오
+      console.log('values', this.translateTargets); //  key 매핑 위해 추출된 _contents: value
 
-      // console.log('최상위 요소들 수', init.length);
-      // console.log('지금까지 잡아낸 _contents 개수', this.container.length);
+      console.log('최상위 요소들 수', init.length);
+      console.log('지금까지 잡아낸 _contents 개수', this.translateTargets.length);
       // console.log('개수', counter.length);
 
       let containerObject = new Object();
-      this.container.forEach(function (item, idx, array) {
+      this.translateTargets.forEach(function (item, idx, array) {
         containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
       })
       this.containerObject = containerObject;

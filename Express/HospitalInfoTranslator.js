@@ -36,7 +36,7 @@ const nullReplacer = 'NLLNAUTOO';
 axios.get('https://t.admin.natoo.co/api/hospital_detail/',
   {
     params: {
-      // hospital_id: 123275,
+      hospital_id: 123275,
       language: 'ko',
       rows: 10000
     },
@@ -56,16 +56,21 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
       targetItem = {
         hospital_id: hospital.hospital_id,
         name: hospital.name,
-        intro_desc: hospital.intro_desc,
         ceo_name: hospital.ceo_name,
+        medical_part_desc: hospital.medical_part_desc,
+        intro_desc: hospital.intro_desc,
+        open_desc: hospital.open_desc,
+        off_desc: hospital.off_desc,
+        part_desc: hospital.part_desc,
+        zip_no: hospital.zip_no,
         address: hospital.address,
         address_detail: hospital.address_detail,
-        zip_no: hospital.zip_no,
         location_step1: hospital.location_step1,
         location_step2_1: hospital.location_step2_1,
         location_step2_2: hospital.location_step2_2,
         subway1: hospital.subway1,
         subway2: hospital.subway2,
+        seller_license_no: hospital.seller_license_no
       }
 
       tempKeys = Object.keys(targetItem);
@@ -130,7 +135,7 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
 
         //  key - value 형성
         resultCn = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerCn[j++], acc), {});
-        resultCn['language'] = 'cn';
+        resultCn['language'] = 'zh_ch';
         console.log('resultCn: ', resultCn);
 
         //  save - cn
@@ -167,7 +172,7 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
 
         //  key - value 형성
         resultTw = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerTw[k++], acc), {});
-        resultTw['language'] = 'tw';
+        resultTw['language'] = 'zh_tw';
         console.log('resultTw: ', resultTw);
 
         //  save - tw

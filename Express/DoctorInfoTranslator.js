@@ -36,7 +36,7 @@ const nullReplacer = 'NLLNAUTOO';
 axios.get('https://t.admin.natoo.co/api/doctor_detail/',
   {
     params: {
-      doctor_id: 10132,
+      // doctor_id: 10132,
       language: 'ko',
       rows: 10000
     },
@@ -57,6 +57,10 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
         doctor_id: doctor.doctor_id,
         name: doctor.name,
         career_history: doctor.career_history,
+        position: doctor.position,
+        major_name: doctor.major_name,
+        medical_part_desc: doctor.medical_part_desc,
+        part_desc: doctor.part_desc
       }
 
       tempKeys = Object.keys(targetItem);
