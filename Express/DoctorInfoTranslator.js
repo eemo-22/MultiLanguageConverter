@@ -27,13 +27,16 @@ let resultEn = [];
 let resultCn = [];
 let resultTw = [];
 
+let doctor_temp_part_desc = [];
+let doctor_temp_medical_part_desc =[];
+
 const target1 = 'en';
 const target2 = 'zh-CN';
 const target3 = 'zh-TW';
 
 const nullReplacer = 'NLLNAUTOO';
 
-axios.get('https://t.admin.natoo.co/api/doctor_detail/',
+axios.get('https://admin.natoo.co/api/doctor_detail/',
   {
     params: {
       // doctor_id: 10132,
@@ -51,7 +54,9 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
           doctor[idx] = nullReplacer;
         }
       }
-      console.log(doctor);
+      doctor_temp_part_desc.push(doctor.part_desc);
+      doctor_temp_medical_part_desc.push(doctor.medical_part_desc);
+      // console.log(doctor);
 
       targetItem = {
         doctor_id: doctor.doctor_id,
@@ -59,8 +64,8 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
         career_history: doctor.career_history,
         position: doctor.position,
         major_name: doctor.major_name,
-        medical_part_desc: doctor.medical_part_desc,
-        part_desc: doctor.part_desc
+        part_desc: '',  //  한국어 -> code 처리
+        medical_part_desc: '',  //  한국어 -> code 처리
       }
 
       tempKeys = Object.keys(targetItem);
@@ -70,11 +75,15 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
     })
     console.log('text', text);
 
-    text.forEach(element => {
+    text.forEach((element, idx) => {
       async function translateEn() {
         let [translations] = await translate.translate(element, target1);
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
+
+        //  part_desc, medecal_part_desc 한국어 주입
+        translations[translations.length - 2] = (doctor_temp_part_desc[idx]);
+        translations[translations.length - 1] = (doctor_temp_medical_part_desc[idx]);
 
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
@@ -91,7 +100,7 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
         console.log('resultEn: ', resultEn);
 
         //  save - en
-          await axios.post('https://t.admin.natoo.co/api/doctor_detail/save',
+          await axios.post('https://admin.natoo.co/api/doctor_detail/save',
             resultEn,
             {
               headers: {
@@ -114,22 +123,28 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
+        translations[translations.length - 2] = (doctor_temp_part_desc[idx]);
+        translations[translations.length - 1] = (doctor_temp_medical_part_desc[idx]);
+
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
           if (translation == 'NLLNAUTO') {
             translation = null;
           }
+          // if (translation.includes('、') || translation.includes('，')) {
+          //   translation = translation.replaceAll(/，|、/g, ',');
+          // }
           nullContainerCn.push(translation);
         })
         console.log('nullContainerCn: ', nullContainerCn);
 
         //  key - value 형성
         resultCn = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerCn[j++], acc), {});
-        resultCn['language'] = 'cn';
+        resultCn['language'] = 'zh_ch';
         console.log('resultCn: ', resultCn);
 
         //  save - cn
-          await axios.post('https://t.admin.natoo.co/api/doctor_detail/save',
+          await axios.post('https://admin.natoo.co/api/doctor_detail/save',
             resultCn,
             {
               headers: {
@@ -151,22 +166,28 @@ axios.get('https://t.admin.natoo.co/api/doctor_detail/',
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
+        translations[translations.length - 2] = (doctor_temp_part_desc[idx]);
+        translations[translations.length - 1] = (doctor_temp_medical_part_desc[idx]);
+
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
           if (translation == 'NLLNAUTO') {
             translation = null;
           }
+          // if (translation.includes('、') || translation.includes('，')) {
+          //   translation = translation.replaceAll(/，|、/g, ',');
+          // }
           nullContainerTw.push(translation);
         })
         console.log('nullContainerCn: ', nullContainerTw);
 
         //  key - value 형성
         resultTw = tempKeys.reduce((acc, curr) => (acc[curr] = nullContainerTw[k++], acc), {});
-        resultTw['language'] = 'tw';
+        resultTw['language'] = 'zh_tw';
         console.log('resultTw: ', resultTw);
 
         //  save - tw
-          await axios.post('https://t.admin.natoo.co/api/doctor_detail/save',
+          await axios.post('https://admin.natoo.co/api/doctor_detail/save',
             resultTw,
             {
               headers: {

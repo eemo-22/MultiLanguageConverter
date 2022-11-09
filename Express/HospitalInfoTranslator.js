@@ -27,16 +27,19 @@ let resultEn = [];
 let resultCn = [];
 let resultTw = [];
 
+let hospital_temp_part_desc = [];
+let hospital_temp_medical_part_desc =[];
+
 const target1 = 'en';
 const target2 = 'zh-CN';
 const target3 = 'zh-TW';
 
 const nullReplacer = 'NLLNAUTOO';
 
-axios.get('https://t.admin.natoo.co/api/hospital_detail/',
+axios.get('https://admin.natoo.co/api/hospital_detail/',
   {
     params: {
-      hospital_id: 123275,
+      // hospital_id: 123154,
       language: 'ko',
       rows: 10000
     },
@@ -51,17 +54,17 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
           hospital[idx] = nullReplacer;
         }
       }
+      hospital_temp_part_desc.push(hospital.part_desc);
+      hospital_temp_medical_part_desc.push(hospital.medical_part_desc);
       // console.log(hospital);
 
       targetItem = {
         hospital_id: hospital.hospital_id,
         name: hospital.name,
         ceo_name: hospital.ceo_name,
-        medical_part_desc: hospital.medical_part_desc,
         intro_desc: hospital.intro_desc,
         open_desc: hospital.open_desc,
         off_desc: hospital.off_desc,
-        part_desc: hospital.part_desc,
         zip_no: hospital.zip_no,
         address: hospital.address,
         address_detail: hospital.address_detail,
@@ -70,7 +73,9 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         location_step2_2: hospital.location_step2_2,
         subway1: hospital.subway1,
         subway2: hospital.subway2,
-        seller_license_no: hospital.seller_license_no
+        seller_license_no: hospital.seller_license_no,
+        part_desc: '',  //  한국어 -> code 처리
+        medical_part_desc: '', //  한국어 -> code 처리
       }
 
       tempKeys = Object.keys(targetItem);
@@ -80,11 +85,15 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
     })
     console.log('text', text);
 
-    text.forEach(element => {
+    text.forEach((element, idx) => {
       async function translateEn() {
         let [translations] = await translate.translate(element, target1);
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
+
+        //  part_desc, medecal_part_desc 한국어 주입
+        translations[translations.length - 2] = (hospital_temp_part_desc[idx]);
+        translations[translations.length - 1] = (hospital_temp_medical_part_desc[idx]);
 
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
@@ -101,7 +110,7 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         console.log('resultEn: ', resultEn);
 
         //  save - en
-          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+          await axios.post('https://admin.natoo.co/api/hospital_detail/save',
             resultEn,
             {
               headers: {
@@ -124,8 +133,14 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
+        translations[translations.length - 2] = (hospital_temp_part_desc[idx]);
+        translations[translations.length - 1] = (hospital_temp_medical_part_desc[idx]);
+
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
+          // if (translation.includes('、') || translation.includes('，')) {
+          //   translation = translation.replaceAll(/，|、/g, ',');
+          // }
           if (translation == 'NLLNAUTO') {
             translation = null;
           }
@@ -139,7 +154,7 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         console.log('resultCn: ', resultCn);
 
         //  save - cn
-          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+          await axios.post('https://admin.natoo.co/api/hospital_detail/save',
             resultCn,
             {
               headers: {
@@ -161,8 +176,14 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         console.log('Translations:', translations);
         translations = Array.isArray(translations) ? translations : [translations];
 
+        translations[translations.length - 2] = (hospital_temp_part_desc[idx]);
+        translations[translations.length - 1] = (hospital_temp_medical_part_desc[idx]);
+
         //  value 에서 null 이스케이프 복구
         translations.forEach(translation => {
+          // if (translation.includes('、') || translation.includes('，')) {
+          //   translation = translation.replaceAll(/，|、/g, ',');
+          // }
           if (translation == 'NLLNAUTO') {
             translation = null;
           }
@@ -176,7 +197,7 @@ axios.get('https://t.admin.natoo.co/api/hospital_detail/',
         console.log('resultTw: ', resultTw);
 
         //  save - tw
-          await axios.post('https://t.admin.natoo.co/api/hospital_detail/save',
+          await axios.post('https://admin.natoo.co/api/hospital_detail/save',
             resultTw,
             {
               headers: {
