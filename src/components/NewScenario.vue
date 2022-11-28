@@ -10,17 +10,25 @@
     <br /><br />
     <button type="button" @click="generateNewScenario">3. 새로운 시나리오 생성</button>
     <span> 새로운 시나리오를 다운받습니다.</span>
+    <!-- <br /><br />
+    <hr />
+    <br />
+    <button type="button" @click="restoreScenario"> 시나리오 복구</button><br />
+    <span> 다국어 시나리오를 일반 시나리오로 전환합니다.</span><br />
+    <span> 최신 버전의 키 맵과 다국어 시나리오가 필요합니다.</span> -->
   </div>
 </template>
 
 <script>
-import resourceScenario from '../json/userToNatooScenario.json';
+import ForignerScenario from '../json/ForignerScenario_New.json';
+import KeyMap from '../json/ForignerKeyMap221020.json';
+
 export default {
   data() {
     return {
       gitple_scenario: '',
       containerObject: '',
-      translateTargets: [],
+      // container: [],
 
       multiLanguage: [],
       jsonKey: [],
@@ -61,35 +69,46 @@ export default {
       e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
       a.dispatchEvent(e);
     },
-    removeDuplication (str, arr) {
-      if (arr.includes(str)) {
-        return;
-      } else {
-        arr.push(str);
-      }
-    },
     convertToObject() {
-      // this.gitple_scenario = resourceScenario;
+      this.gitple_scenario = ForignerScenario;
+      const keyMap = Object.values(KeyMap.ko);
       let init = [];
-      let counter = [];
+      // let counter = [];
+      let container = [];
+      const resultContainer = [];
 
-      const resourceJson = structuredClone(resourceScenario);
+      let i = 0;
 
-      console.log('origin', resourceScenario);
-      console.log('clone', resourceJson);
+      /* 
+        주석 제거 금지 -> 이게 여기에 선언되니까 i++가 안 먹히던 것...
+        let keyIdx = 'message_' + ((i++).toString().padStart(4, '0'));
 
-      resourceJson.graph.forEach(element => {
+        중복을 제거하면, 원본 시나리오와 key로 교체된 시나리오의 _contents 숫자가 일치하지 않게 된다.
+        중복 제거는 번역 수준에서 처리하거나, 별개의 key map 생성 로직 필요
+        container[] 에서 중복을 제거하고 key map을 형성하는 쪽이 현재로서는 좋아 보인다.
+      */
+
+      /*
+        시나리오가 업데이트 되었을 경우(내용 추가가 아닌, 업로드 되어 있는 시나리오 json의 다양한 이유로 인한 구조상의 변화)
+        시나리오를 내려받고, 해당 시나리오와 key map을 import 하여 1 -> 2 -> 3 순서로 다시 작동시킨다.
+      */
+
+      this.gitple_scenario.graph.forEach(element => {
         init.push(element);
 
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
-            this.removeDuplication(element.value._contents, this.translateTargets);
+            container.push(element.value._contents);
+            if (element.value._contents) {
+              element.value._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
+            }
           }
           
           if (element.value._items) { //  value.items[_contents] -> 2차
             element.value._items.forEach(item => {
               if (!item._contents == null || !item._contents == "") {
-                this.removeDuplication(item._contents, this.translateTargets);
+                container.push(item._contents);
+                item._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
               }
             })
           }
@@ -98,21 +117,31 @@ export default {
         if (element.children) { //  children[value._contents] -> 2차
           element.children.forEach(child => {
             if (!child.value._contents == null || !child.value._contents == "") {
-              this.removeDuplication(child.value._contents, this.translateTargets);
+              container.push(child.value._contents);
+              child.value._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
             }
           })
         }
       });
 
-      console.log('changed obj', resourceJson.graph); //  key로 _contents를 변환한 시나리오
-      console.log('values', this.translateTargets); //  key 매핑 위해 추출된 _contents: value
+      console.log('changed obj', this.gitple_scenario.graph); //  key로 _contents를 변환한 시나리오
+      console.log('values', container); //  key 매핑 위해 추출된 _contents: value
 
-      console.log('최상위 요소들 수', init.length);
-      console.log('지금까지 잡아낸 _contents 개수', this.translateTargets.length);
+      // console.log('최상위 요소들 수', init.length);
+      // console.log('지금까지 잡아낸 _contents 개수', this.container.length);
       // console.log('개수', counter.length);
 
+      container.forEach((item, index) => {
+        if (item.includes("${$lang.message_")) {
+          item = keyMap[index];
+        } else {
+          item = item;
+        }
+        resultContainer.push(item);
+      })
+
       let containerObject = new Object();
-      this.translateTargets.forEach(function (item, idx, array) {
+      resultContainer.forEach(function (item, idx, array) {
         containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
       })
       this.containerObject = containerObject;
