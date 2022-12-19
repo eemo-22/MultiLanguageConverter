@@ -92,6 +92,10 @@ axios.get('https://admin.natoo.co/api/hospital_detail/',
         translations = Array.isArray(translations) ? translations : [translations];
 
         //  part_desc, medecal_part_desc 한국어 주입
+
+        /* 
+          하단 진료과목 코드를 각 언어로 번역했다가, 다시 한국어 유지하게 했는데, 다시 번역처리(검수된)자료로 바뀐 듯
+        */
         translations[translations.length - 2] = (hospital_temp_part_desc[idx]);
         translations[translations.length - 1] = (hospital_temp_medical_part_desc[idx]);
 
