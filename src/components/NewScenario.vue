@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import ForignerScenario from '../json/ForignerScenario_New.json';
-import KeyMap from '../json/ForignerKeyMap221020.json';
+import ForignerScenario from '../json//local/Local_Scenario_Origin.json';
+import keyMap from '../json/local/Local_Scenario_Keymap_230111.json';
 
 export default {
   data() {
@@ -71,11 +71,33 @@ export default {
     },
     convertToObject() {
       this.gitple_scenario = ForignerScenario;
-      const keyMap = Object.values(KeyMap.ko);
+      const keyMapValues = Object.values(keyMap.ko);
       let init = [];
       // let counter = [];
       let container = [];
       const resultContainer = [];
+      let newKeyMap =[];
+
+      const originKeyMap = keyMap.ko;
+      // console.log('ori', originKeyMap);
+
+      //  변경 예정
+
+      let newKeyMapArray = Object.keys(originKeyMap).map(key => originKeyMap[key]);
+      let settedKeyMap = new Set(newKeyMapArray);
+
+      newKeyMap = [...settedKeyMap];
+      console.log('NEW KEY MAP!: ', newKeyMap);
+
+    
+      let newKeyJSON = new Object();
+      newKeyMap.forEach(function (item, idx, array) {
+        newKeyJSON[item] = item;
+      })
+
+      console.log('NKJ', newKeyJSON);
+
+      
 
       let i = 0;
 
@@ -93,6 +115,12 @@ export default {
         시나리오를 내려받고, 해당 시나리오와 key map을 import 하여 1 -> 2 -> 3 순서로 다시 작동시킨다.
       */
 
+      /*
+        "type": "openLink"
+        상기 항목이 나투홈 또는 예약으로 이동 등 링크 연결 버튼이다.
+        입력값은 "label"에 저장되고, 해당 항목을 다국어 처리 하면 적용된다.
+      */
+
       this.gitple_scenario.graph.forEach(element => {
         init.push(element);
 
@@ -101,6 +129,14 @@ export default {
             container.push(element.value._contents);
             if (element.value._contents) {
               element.value._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
+            }
+            if (element.value._navButtons.length) {
+              element.value._navButtons.forEach(el => {
+                if (el.type === "openLink") {
+                  container.push(el.label);
+                  el.label = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
+                }
+              })
             }
           }
           
@@ -127,25 +163,45 @@ export default {
       console.log('changed obj', this.gitple_scenario.graph); //  key로 _contents를 변환한 시나리오
       console.log('values', container); //  key 매핑 위해 추출된 _contents: value
 
-      // console.log('최상위 요소들 수', init.length);
-      // console.log('지금까지 잡아낸 _contents 개수', this.container.length);
-      // console.log('개수', counter.length);
+    //  수정 진행 중 - key map -> value 기반 처리 
 
-      container.forEach((item, index) => {
-        if (item.includes("${$lang.message_")) {
-          item = keyMap[index];
-        } else {
-          item = item;
-        }
-        resultContainer.push(item);
-      })
+    //   // console.log('최상위 요소들 수', init.length);
+    //   // console.log('지금까지 잡아낸 _contents 개수', this.container.length);
+    //   // console.log('개수', counter.length);
 
-      let containerObject = new Object();
-      resultContainer.forEach(function (item, idx, array) {
-        containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
-      })
-      this.containerObject = containerObject;
-      console.log('obj for download', this.containerObject)
+    //   // let tempResult = [];
+    //   // let settedContainer = [];
+
+    //   // container.forEach((item, index) => {
+    //   //   if (item.includes("${$lang.message_")===true) {
+    //   //     item = keyMapValues[index];
+    //   //   } else {
+    //   //     item = item;
+    //   //   }
+    //   //   tempResult.push(item);
+    //   // })
+    //   container.forEach((item, index) => {
+    //     if (item.includes("${$lang.message_")===true) {
+    //       item = keyMapValues[index];
+    //     } else {
+    //       item = item;
+    //     }
+    //     resultContainer.push(item);
+    //   })
+
+    //   // settedContainer = new Set(tempResult);
+    //   // console.log('SET', settedContainer);
+
+    //   // this.resultContainer = [...settedContainer];
+
+    //   let containerObject = new Object();
+    //   resultContainer.forEach(function (item, idx, array) {
+    //     // console.log('ggg', item);
+    //     // console.log('iiiiiii', idx);
+    //     containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
+    //   })
+    //   this.containerObject = containerObject;
+    //   console.log('obj for download', this.containerObject)
     },
   }
 }
