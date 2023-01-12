@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import ForignerScenario from '../json/ForignerScenario_New.json';
-import KeyMap from '../json/ForignerKeyMap221020.json';
+import ForignerScenario from '../json/local/Local_Scenario_Origin.json';
+import KeyMap from '../json/local/Local_Scenario_Keymap_230112.json';
 
 export default {
   data() {
@@ -87,6 +87,7 @@ export default {
         중복 제거는 번역 수준에서 처리하거나, 별개의 key map 생성 로직 필요
         container[] 에서 중복을 제거하고 key map을 형성하는 쪽이 현재로서는 좋아 보인다.
       */
+      //  한 번 읽어서 값 가져옴 -> 키맵 생성(중복제거) -> 다시 읽어서 키맵 값과 일치하는 곳에 번호 매기기
 
       /*
         시나리오가 업데이트 되었을 경우(내용 추가가 아닌, 업로드 되어 있는 시나리오 json의 다양한 이유로 인한 구조상의 변화)
@@ -99,16 +100,12 @@ export default {
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
             container.push(element.value._contents);
-            if (element.value._contents) {
-              element.value._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
-            }
           }
           
           if (element.value._items) { //  value.items[_contents] -> 2차
             element.value._items.forEach(item => {
               if (!item._contents == null || !item._contents == "") {
                 container.push(item._contents);
-                item._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
               }
             })
           }
@@ -118,7 +115,6 @@ export default {
           element.children.forEach(child => {
             if (!child.value._contents == null || !child.value._contents == "") {
               container.push(child.value._contents);
-              child.value._contents = '${$lang.message_' + ((i++).toString().padStart(4, '0')) + '}';
             }
           })
         }
@@ -132,7 +128,7 @@ export default {
       // console.log('개수', counter.length);
 
       container.forEach((item, index) => {
-        if (item.includes("${$lang.message_")) {
+        if (item.includes("${$lang.message_")) {  //  업데이트 시 키 값 통일
           item = keyMap[index];
         } else {
           item = item;
@@ -140,12 +136,77 @@ export default {
         resultContainer.push(item);
       })
 
+      //  중복 제거 키맵
+      // 키맵에서 중복되는 키값 제거 -> 중복된 키값 알아내기 -> 제거되는 키 남아있게 되는 키로 통합
+
+      console.log('result container', resultContainer);
+
+      const settedContainer = new Set(resultContainer);
+      const newResult = []; //  중복이 제거된 키 맵(key: index)
+
+      settedContainer.forEach((element, index) => {
+        if (element.includes("${$lang.message_")) {
+          element = keyMap[index];
+        } else {
+          element = element;
+        }
+        newResult.push(element);
+      })
+
+      console.log('New Result!', newResult);
+
+      //  중복 제거된 키맵
+      //  _contents 를 가져오면서 message_n 을 주지 말고, 값만 가져오고 나서
+      //  중복 없는 키맵을 만든 후, 이제 키 맵과 값을 비교하면서 값이 일치하는 곳에 해당 키 맵 번호 매기기
+      //  이러면 모든게 해결?
+
       let containerObject = new Object();
-      resultContainer.forEach(function (item, idx, array) {
+      newResult.forEach(function (item, idx, array) {
         containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
       })
-      this.containerObject = containerObject;
+      this.containerObject = containerObject; //  중복 제거, key 값 매겨진 최종 키 맵
       console.log('obj for download', this.containerObject)
+
+
+      
+      this.gitple_scenario.graph.forEach(element => {
+        if (element.value) {  //  value._contents -> 1차
+          if (!element.value._contents == null || !element.value._contents == "") {
+            if (element.value._contents) {
+              let idx = newResult.findIndex((targetValue) => targetValue === element.value._contents);
+              element.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
+            }
+          }
+          
+          if (element.value._items) { //  value.items[_contents] -> 2차
+            element.value._items.forEach(item => {
+              if (!item._contents == null || !item._contents == "") {
+                let idx = newResult.findIndex((targetValue) => targetValue === item._contents);
+                item._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
+              }
+            })
+          }
+        }
+
+        if (element.children) { //  children[value._contents] -> 2차
+          element.children.forEach(child => {
+            if (!child.value._contents == null || !child.value._contents == "") {
+              let idx = newResult.findIndex((targetValue) => targetValue === child.value._contents);
+              child.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
+            }
+          })
+        }
+      });
+
+      console.log('FINAL', this.gitple_scenario.graph);
+
+      //  기존 키맵
+      // let containerObject = new Object();
+      // resultContainer.forEach(function (item, idx, array) {
+      //   containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
+      // })
+      // this.containerObject = containerObject;
+      // console.log('obj for download', this.containerObject)
     },
   }
 }
