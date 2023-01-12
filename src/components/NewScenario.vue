@@ -100,6 +100,13 @@ export default {
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
             container.push(element.value._contents);
+            if (element.value._navButtons.length) {
+              element.value._navButtons.forEach(el => {
+                if (el.type === "openLink") {
+                  container.push(el.label);
+                }
+              })
+            }
           }
           
           if (element.value._items) { //  value.items[_contents] -> 2차
@@ -165,7 +172,7 @@ export default {
         containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
       })
       this.containerObject = containerObject; //  중복 제거, key 값 매겨진 최종 키 맵
-      console.log('obj for download', this.containerObject)
+      console.log('obj for KeyMap', this.containerObject)
 
 
       
@@ -175,6 +182,14 @@ export default {
             if (element.value._contents) {
               let idx = newResult.findIndex((targetValue) => targetValue === element.value._contents);
               element.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
+            }
+            if (element.value._navButtons.length) {
+              element.value._navButtons.forEach(el => {
+                if (el.type === "openLink") {
+                  let idx = newResult.findIndex((targetValue) => targetValue === el.label);
+                  el.label = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
+                }
+              })
             }
           }
           
