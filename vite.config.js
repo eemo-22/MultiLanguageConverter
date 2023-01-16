@@ -11,11 +11,18 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  proxy: {
-    '/api': {
-      target: 'localhost:3000/api',
-      changeOrigin: true,
-      rewrite: (path) => path.replace(/^\/api/, '')
-    }
-  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'localhost:3000/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/aiapi': {
+        target: 'http://116.125.141.171:5002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/aiapi/, '')
+      }
+    },
+  }
 })

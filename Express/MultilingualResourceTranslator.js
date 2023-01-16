@@ -4,6 +4,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
 const path = require("path");
 const fs = require("fs");
 const { join } = require('path');
+const axios = require('axios');
 
 const RESOURCE_FILE_NAME = "convert01.tsv";
 const resourcePath = path.join(__dirname, '..', 'Express/resource', RESOURCE_FILE_NAME);
@@ -65,6 +66,22 @@ const enTranslated = [];
 const cnTranslated = [];
 const twTranslated = [];
 
+async function translateApi(text, language) {
+  axios.post('http://116.125.141.171:5002/ait/translate', 
+  {
+    target: language,
+    text: text
+  },
+  {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
+  .then(response => {
+    console.log('RES!!', response);
+  })
+};
+
 async function translateEn() {
   bigText = [];
   if (textBuff.length > 128) {
@@ -77,12 +94,13 @@ async function translateEn() {
     for (let i = 0; i < textBuff.length; i++) {
       bigText.push(textBuff.shift());
     }
+    console.log('what?', bigText);
     console.log('how many?', bigText.length);
   }
 
-  let [translations] = await translate.translate(bigText, target1);
-  translations = Array.isArray(translations) ? translations : [translations];
-  // console.log('en Translations:');
+  let translations = await translateApi(bigText, target1);
+  // translations = Array.isArray(translations) ? translations : [translations];
+  console.log('en Translations:', translations);
   translations.forEach((translation, i) => {
     console.log(`${i}, ${bigText[i]} => (${target1}) ${translation}`);
     enTranslated.push(translations[i]);
@@ -91,7 +109,7 @@ async function translateEn() {
 }translateEn();
 
 async function translateCn() {
-  let [translations] = await translate.translate(bigText, target2);
+  let [translations] = await translateApi(bigText, target2);
   translations = Array.isArray(translations) ? translations : [translations];
   // console.log('zh Translations:');
   translations.forEach((translation, i) => {
@@ -111,7 +129,7 @@ async function translateTw() {
   // };
   // let [translations] = await translate.translate(bigText, options);
 
-  let [translations] = await translate.translate(bigText, target3);
+  let [translations] = await translateApi(bigText, target3);
   translations = Array.isArray(translations) ? translations : [translations];
   // console.log('zh Translations:');
   translations.forEach((translation, i) => {

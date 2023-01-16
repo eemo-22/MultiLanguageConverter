@@ -10,6 +10,8 @@
     <br /><br />
     <button type="button" @click="generateNewScenario">3. 새로운 시나리오 생성</button>
     <span> 새로운 시나리오를 다운받습니다.</span>
+    <br /><br />
+    <button type="button" @click="scenarioTranslation">ㅎㅎ</button>
     <!-- <br /><br />
     <hr />
     <br />
@@ -22,6 +24,7 @@
 <script>
 import ForignerScenario from '../json/local/Local_Scenario_Origin.json';
 import KeyMap from '../json/local/Local_Scenario_Keymap_230112.json';
+import axios from 'axios'
 
 export default {
   data() {
@@ -33,9 +36,117 @@ export default {
       multiLanguage: [],
       jsonKey: [],
       rString: '',
+
+      translateLanguage: [
+        'zh',
+        'en'
+      ],
+      textBuff: [],
+      textsTofile: [],
+
+      keyMapObject: {},
+      isOngoing: false
     }
   },
   methods: {
+    scenarioTranslation() {
+      let textBuffDuplicator = this.textBuff;
+
+      for (let i = 0; i < this.translateLanguage.length; i++) {
+        if (i === 0) {
+          console.log(this.translateLanguage[0])
+          this.translateApi(this.translateLanguage[0]);
+
+
+
+
+
+          //  이거 다음 언어로 왜 안넘어감?
+          //  required text 뜨는데 배열 비워졌길래 채워줬는데?
+          //  시간 문제임? 비동기처리 타이밍 이상해서?
+
+
+
+          
+
+        } else if (i > 0) {
+          setInterval(() => {
+            if (this.isOngoing === false) {
+              console.log('my turn!', this.translateLanguage[i]);
+              if (this.textBuff.length === 0) {
+                this.textBuff = textBuffDuplicator;
+                this.translateApi(this.translateLanguage[i]);
+              }
+            } else {
+              setTimeout(() => {
+                console.log('waiting.....')
+              }, 1000);
+            }
+          }, 1000);
+        }
+
+      }
+    
+    },
+    async translateApi(inputLanguage) {
+      this.isOngoing = true;
+      let bigText = [];
+
+      // console.log('text buff', this.textBuff);
+
+      if (this.textBuff.length > 128) {
+        for (let i = 0; i < 128; i++) {
+          console.log('shift');
+          bigText.push(this.textBuff.shift());
+        }
+      } else {
+        console.log('ok');
+        for (let i = 0; i < this.textBuff.length; i++) {
+          bigText.push(this.textBuff.shift());
+        }
+        // console.log('what?', bigText);
+        console.log('how many?', bigText.length);
+      }
+
+      await axios.post('/aiapi/ait/translate', 
+      {
+        target: inputLanguage,
+        text: bigText
+        // text: ['안녕', '반가워요', '잘 되나요?']
+      },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+      .then(response => {
+        console.log('RES!!', response);
+        response.data.result.forEach(element => {
+          this.textsTofile.push(element.translatedText);
+        })
+
+        // console.log('to file', this.textsTofile);
+        
+
+        if (this.textBuff.length === 0) {
+          console.log('done!');
+          this.isOngoing = false;
+        } else {
+          this.translateApi(inputLanguage);
+          this.isOngoing = true;
+        }
+      })
+      let containerObject = new Object();
+      this.textsTofile.forEach(function (item, idx, array) {
+        containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
+      })
+      this.translatedObject = containerObject;
+      
+      //  ready to file writing
+      let writeLang = inputLanguage;
+      this.keyMapObject.ko = this.containerObject;
+      this.keyMapObject[writeLang] = this.translatedObject;
+    },
     generateNewScenario() {
       const data = JSON.stringify(this.gitple_scenario)
 
@@ -49,11 +160,20 @@ export default {
       a.dispatchEvent(e);
     },
     downloadKoreanJson() {
-      //  깃플 다국어 json 형식
-      const koreanObject = {};
-      koreanObject.ko = this.containerObject;
+      //  깃플 다국어 json 형식 Key Map
 
-      const data = JSON.stringify(koreanObject)
+      //  여기야 여기
+      //  언어별로 json에 넣는 방법은?
+      //  한 번에 가능? 버튼으로 여러번에?
+      //  다운로드 전에 입력 후 다운하도록 해야 할까?
+
+      //  keyMapObject 를 전역으로 만들어서
+      //  번역기에서 언어별로 돌리면서 json 자체를 완성한 다음
+      //  이 메서드에서는 파일 쓰기와 다운로드 처리만 ㄱ
+
+
+
+      const data = JSON.stringify(this.keyMapObject)
         .replace(/<\/?[^>]+>/gi, '')
         .replace(/&gt;/g, '>')
         .replace(/&nbsp;/g, ' ')
@@ -161,6 +281,10 @@ export default {
       })
 
       console.log('New Result!', newResult);
+      newResult.forEach(resultItem => {
+        this.textBuff.push(resultItem);
+      })
+      console.log('wow', this.textBuff);
 
       //  중복 제거된 키맵
       //  _contents 를 가져오면서 message_n 을 주지 말고, 값만 가져오고 나서
@@ -173,6 +297,9 @@ export default {
       })
       this.containerObject = containerObject; //  중복 제거, key 값 매겨진 최종 키 맵
       console.log('obj for KeyMap', this.containerObject)
+
+      //  TODO
+      //  이제 이 키 맵 value를 번역기로 보내서, 받아온 언어를 키 맵으로 설정하기
 
 
       
