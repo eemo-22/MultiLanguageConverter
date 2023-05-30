@@ -10,6 +10,31 @@
     <br /><br />
     <button type="button" @click="generateNewScenario">3. 새로운 시나리오 생성</button>
     <span> 새로운 시나리오를 다운받습니다.</span>
+    <br /><br />
+    <button type="button" @click="cutOffDuplicatedValues">EX. 중복 키 제거</button>
+    <span> 구버전 키맵에서 중복되는 값을 제거합니다.</span>
+
+    <br>
+    ko
+    <ul v-for="value in filterdKoArr" :key="value">
+      {{ value }}
+    </ul>
+    <br>
+    zh
+    <ul v-for="value in filterdZhArr" :key="value">
+      {{ value }}
+    </ul>
+    <br>
+    en
+    <ul v-for="value in filterdEnArr" :key="value">
+      {{ value }}
+    </ul>
+    <br>
+    ja
+    <ul v-for="value in filterdJaArr" :key="value">
+      {{ value }}
+    </ul>
+    <br>
     <!-- <br /><br />
     <hr />
     <br />
@@ -20,8 +45,8 @@
 </template>
 
 <script>
-import ForignerScenario from '../json/local/Local_Scenario_Origin.json';
-import KeyMap from '../json/local/Local_Scenario_Keymap_230112.json';
+import ForignerScenario from '../json/old/userToNatooScenario.json';
+import KeyMap from '../json/local/User_to_Natoo_230530_key_Origin230530.json';
 
 export default {
   data() {
@@ -33,9 +58,63 @@ export default {
       multiLanguage: [],
       jsonKey: [],
       rString: '',
+      
+      filterdKoArr: [],
+      filterdZhArr: [],
+      filterdEnArr: [],
+      filterdJaArr: [],
     }
   },
   methods: {
+    cutOffDuplicatedValues() {
+      //  ko
+      const keyMap = Object.values(KeyMap.ko);
+
+      const newArray = [];
+      const duplicateKeys = [];
+
+      for (const [key, value] of Object.entries(keyMap)) {
+        if (!newArray.includes(value)) {
+          newArray.push(value);
+        } else {
+          duplicateKeys.push(key);
+        }
+      }
+      this.filterdKoArr = newArray;
+
+      //  zh
+      const keyMapZh = Object.values(KeyMap.zh);
+      const filteredArrayZh = [];
+
+      for (const [key, value] of Object.entries(keyMapZh)) {
+        if (!duplicateKeys.includes(key)) {
+          filteredArrayZh.push(value);
+        }
+      }
+      this.filterdZhArr = filteredArrayZh;
+
+      //  en
+      const keyMapEn = Object.values(KeyMap.en);
+      const filteredArrayEn = [];
+
+      for (const [key, value] of Object.entries(keyMapEn)) {
+        if (!duplicateKeys.includes(key)) {
+          filteredArrayEn.push(value);
+        }
+      }
+      this.filterdEnArr = filteredArrayEn;
+
+      //  ja
+      const keyMapJa = Object.values(KeyMap.ja);
+      const filteredArrayJa = [];
+
+      for (const [key, value] of Object.entries(keyMapJa)) {
+        if (!duplicateKeys.includes(key)) {
+          filteredArrayJa.push(value);
+        }
+      }
+      this.filterdJaArr = filteredArrayJa;
+    },
     generateNewScenario() {
       const data = JSON.stringify(this.gitple_scenario)
 
@@ -181,6 +260,7 @@ export default {
           if (!element.value._contents == null || !element.value._contents == "") {
             if (element.value._contents) {
               let idx = newResult.findIndex((targetValue) => targetValue === element.value._contents);
+              console.log('index?', idx);
               element.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
             }
             if (element.value._navButtons.length) {
