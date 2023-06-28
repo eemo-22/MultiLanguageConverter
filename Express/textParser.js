@@ -9,19 +9,23 @@
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  await page.goto('https://natoo.co/'); //  target URL
+  await page.goto('http://192.168.18.38:5173/'); //  target URL
 
   // await page.type('target class', '검색어');
   // await page.type('input[class="gLFyf gsfi"]', String.fromCharCode(13));  // 엔터키 -> 검색
 
   await page.waitForSelector('article div');  //  selector 가 로드될 때까지 대기
-  const h1 = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('h1')).map(h1 => (h1.textContent));
+  const div = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('div')).map(div => (div.textContent));
   });
   const p = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('p')).map(p => (p.textContent));
   });
-  console.log('h1: ', h1);
+  const span = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('span')).map(span => (span.textContent));
+  });
+  console.log('div: ', div);
   console.log('p: ', p);
+  console.log('span: ', span);
   await browser.close();
 })();
