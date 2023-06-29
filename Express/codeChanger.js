@@ -1,16 +1,20 @@
 const fs = require('fs');
 
 // Vue 파일 읽기
-const vueCode = fs.readFileSync('C:/NatooAPI3/frontend/src/coupon_v2/src/views/MembershipUpgradeView.vue', 'utf-8');
+const vueCode = fs.readFileSync('C:/NatooAPI3/frontend/src/coupon_v2/src/components/hospitalCoupon_v2.vue', 'utf-8');
 
 // 템플릿 내부의 텍스트 변환 함수
 function transformTextInTemplate(template) {
   const regex = /(<(div|p|span)[^>]*>)([^<]*)(<\/\2>)/g;
   return template.replace(regex, (match, openingTag, tag, text, closingTag) => {
+    if (text.trim() === '') {
+      return match; // Skip transformation if the text is empty
+    }
     const transformedText = `{{$t("${text.trim()}")}}`;
     return openingTag + transformedText + closingTag;
   });
 }
+
 
 // Vue 파일에서 <template> 영역 추출
 const templateRegex = /<template>([\s\S]*?)<\/template>/;
