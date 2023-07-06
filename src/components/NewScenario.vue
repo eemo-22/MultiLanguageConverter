@@ -35,18 +35,18 @@
       {{ value }}
     </ul>
     <br>
-    <!-- <br /><br />
+    <br /><br />
     <hr />
     <br />
     <button type="button" @click="restoreScenario"> 시나리오 복구</button><br />
     <span> 다국어 시나리오를 일반 시나리오로 전환합니다.</span><br />
-    <span> 최신 버전의 키 맵과 다국어 시나리오가 필요합니다.</span> -->
+    <span> 최신 버전의 키 맵과 다국어 시나리오가 필요합니다.</span>
   </div>
 </template>
 
 <script>
-import ForignerScenario from '../json/old/userToNatooScenario.json';
-import KeyMap from '../json/local/User_to_Natoo_230530_key_Origin230530.json';
+import ForignerScenario from '../json/user_natoo/User_to_Natoo_changed_scenario_230706.json';
+import KeyMap from '../json/user_natoo/User_to_Natoo_KeyMap_230605_1.json';
 
 export default {
   data() {
@@ -66,6 +66,61 @@ export default {
     }
   },
   methods: {
+    restoreScenario() {
+      console.log('111');
+      this.gitple_scenario = ForignerScenario;
+      const keyMap = KeyMap.ko;
+
+      console.log(this.gitple_scenario);
+      console.log(keyMap);
+
+      this.gitple_scenario.graph.forEach(element => {
+
+        if (element.value) {  //  value._contents -> 1차
+          if (!element.value._contents == null || !element.value._contents == "") {
+            if (element.value._contents.startsWith('${$lang.message')) {
+              let extractedNumber = element.value._contents.match(/message_(\d+)/)[1];
+              // console.log('extractedNumber!', extractedNumber);
+              // console.log('matched keymap value', keyMap[`message_${extractedNumber}`]);
+              element.value._contents = keyMap[`message_${extractedNumber}`];
+            }
+            if (element.value._navButtons.length) {
+              element.value._navButtons.forEach(el => {
+                if (el.type === "openLink") {
+                  if (el.label.startsWith('${$lang.message')) {
+                    let extractedNumber = el.label.match(/message_(\d+)/)[1];
+                    el.label = keyMap[`message_${extractedNumber}`];
+                  }
+                }
+              })
+            }
+          }
+
+          if (element.value._items) { //  value.items[_contents] -> 2차
+            element.value._items.forEach(item => {
+              if (!item._contents == null || !item._contents == "") {
+                if (item._contents.startsWith('${$lang.message')) {
+                  let extractedNumber = item._contents.match(/message_(\d+)/)[1];
+                  item._contents = keyMap[`message_${extractedNumber}`];
+                }
+              }
+            })
+          }
+
+          if (element.children) { //  children[value._contents] -> 2차
+            element.children.forEach(child => {
+              if (!child.value._contents == null || !child.value._contents == "") {
+                if (child.value._contents.startsWith('${$lang.message')) {
+                  let extractedNumber = child.value._contents.match(/message_(\d+)/)[1];
+                  child.value._contents = keyMap[`message_${extractedNumber}`];
+                }
+              }
+            })
+          }
+        }
+      });
+      console.log('result', this.gitple_scenario);
+    },
     cutOffDuplicatedValues() {
       //  ko
       const keyMap = Object.values(KeyMap.ko);
@@ -149,7 +204,10 @@ export default {
       a.dispatchEvent(e);
     },
     convertToObject() {
-      this.gitple_scenario = ForignerScenario;
+      if (!this.gitple_scenario) {
+        this.gitple_scenario = ForignerScenario;
+      }
+      // this.gitple_scenario = ForignerScenario;
       const keyMap = Object.values(KeyMap.ko);
       let init = [];
       // let counter = [];
@@ -245,6 +303,20 @@ export default {
       //  _contents 를 가져오면서 message_n 을 주지 말고, 값만 가져오고 나서
       //  중복 없는 키맵을 만든 후, 이제 키 맵과 값을 비교하면서 값이 일치하는 곳에 해당 키 맵 번호 매기기
       //  이러면 모든게 해결?
+
+
+
+      
+      
+      //  시도해볼 방법
+
+      // 새로운 배열을 만들어서 중복 제거된 value들을 몰아넣고,
+      // 기존 키 맵과 대조하여 value가 같으면 새로운 키 맵을 생성, 거기에 집어넣는다
+      // 겹치지 않는 value들은 새 객체의 뒤에 몰아넣는다
+
+
+
+
 
       let containerObject = new Object();
       newResult.forEach(function (item, idx, array) {
