@@ -78,7 +78,7 @@ export default {
 
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
-            if (element.value._contents.startsWith('${$lang.message')) {
+            if (element.value._contents.startsWith('${$lang.message') || element.value._contents.startsWith('<div>$')) {
               let extractedNumber = element.value._contents.match(/message_(\d+)/)[1];
               // console.log('extractedNumber!', extractedNumber);
               // console.log('matched keymap value', keyMap[`message_${extractedNumber}`]);
@@ -87,7 +87,7 @@ export default {
             if (element.value._navButtons.length) {
               element.value._navButtons.forEach(el => {
                 if (el.type === "openLink") {
-                  if (el.label.startsWith('${$lang.message')) {
+                  if (el.label.startsWith('${$lang.message') || element.value._contents.startsWith('<div>$')) {
                     let extractedNumber = el.label.match(/message_(\d+)/)[1];
                     el.label = keyMap[`message_${extractedNumber}`];
                   }
@@ -99,7 +99,7 @@ export default {
           if (element.value._items) { //  value.items[_contents] -> 2차
             element.value._items.forEach(item => {
               if (!item._contents == null || !item._contents == "") {
-                if (item._contents.startsWith('${$lang.message')) {
+                if (item._contents.startsWith('${$lang.message') || element.value._contents.startsWith('<div>$')) {
                   let extractedNumber = item._contents.match(/message_(\d+)/)[1];
                   item._contents = keyMap[`message_${extractedNumber}`];
                 }
@@ -305,21 +305,47 @@ export default {
       //  이러면 모든게 해결?
 
 
+      //  시나리오 구조가 변경되었을 때
+
+      //  새로운 배열을 만들어서 중복 제거된 value들을 몰아넣고,
+      //  기존 키 맵과 대조하여 value가 같으면 새로운 키 맵을 생성, 거기에 집어넣는다
+      //  겹치지 않는 value들은 새 객체의 뒤에 몰아넣는다
+
+      const rearrangedValues = [];
+      const matchedValues = [];
+      
+      for (const key in newResult) {
+        if (keyMap.some(value => newResult[key] === value)) {
+          matchedValues.push(newResult[key]);
+          delete newResult[key];
+        }
+      }
+
+      //  이 부분 필요?
+      // for (const value of keyMap) {
+      //   for (const key in newResult) {
+      //     if (newResult[key] === value) {
+      //       rearrangedValues.push(newResult[key]);
+      //       delete newResult[key];
+      //     }
+      //   }
+      // }
+
+      for (const key in newResult) {
+        rearrangedValues.push(newResult[key]);
+      }
+
+      rearrangedValues.unshift(...matchedValues);
+
+      console.log('matchedValues', matchedValues);
+      console.log('newResult', newResult);
+      
+      console.log('rearrangedValues', rearrangedValues);
+
 
       
-      
-      //  시도해볼 방법
-
-      // 새로운 배열을 만들어서 중복 제거된 value들을 몰아넣고,
-      // 기존 키 맵과 대조하여 value가 같으면 새로운 키 맵을 생성, 거기에 집어넣는다
-      // 겹치지 않는 value들은 새 객체의 뒤에 몰아넣는다
-
-
-
-
-
       let containerObject = new Object();
-      newResult.forEach(function (item, idx, array) {
+      rearrangedValues.forEach(function (item, idx, array) {
         containerObject["message_" + (idx.toString().padStart(4, '0'))] = item;
       })
       this.containerObject = containerObject; //  중복 제거, key 값 매겨진 최종 키 맵
@@ -331,14 +357,14 @@ export default {
         if (element.value) {  //  value._contents -> 1차
           if (!element.value._contents == null || !element.value._contents == "") {
             if (element.value._contents) {
-              let idx = newResult.findIndex((targetValue) => targetValue === element.value._contents);
+              let idx = rearrangedValues.findIndex((targetValue) => targetValue === element.value._contents);
               console.log('index?', idx);
               element.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
             }
             if (element.value._navButtons.length) {
               element.value._navButtons.forEach(el => {
                 if (el.type === "openLink") {
-                  let idx = newResult.findIndex((targetValue) => targetValue === el.label);
+                  let idx = rearrangedValues.findIndex((targetValue) => targetValue === el.label);
                   el.label = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
                 }
               })
@@ -348,7 +374,7 @@ export default {
           if (element.value._items) { //  value.items[_contents] -> 2차
             element.value._items.forEach(item => {
               if (!item._contents == null || !item._contents == "") {
-                let idx = newResult.findIndex((targetValue) => targetValue === item._contents);
+                let idx = rearrangedValues.findIndex((targetValue) => targetValue === item._contents);
                 item._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
               }
             })
@@ -358,7 +384,7 @@ export default {
         if (element.children) { //  children[value._contents] -> 2차
           element.children.forEach(child => {
             if (!child.value._contents == null || !child.value._contents == "") {
-              let idx = newResult.findIndex((targetValue) => targetValue === child.value._contents);
+              let idx = rearrangedValues.findIndex((targetValue) => targetValue === child.value._contents);
               child.value._contents = '${$lang.message_' + ((idx).toString().padStart(4, '0')) + '}';
             }
           })
