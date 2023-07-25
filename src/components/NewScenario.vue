@@ -45,8 +45,8 @@
 </template>
 
 <script>
-import ForignerScenario from '../json/user_natoo/User_to_Natoo_changed_scenario_230706.json';
-import KeyMap from '../json/user_natoo/User_to_Natoo_KeyMap_230605_1.json';
+import ForignerScenario from '../json/scenario/scenario-bot-36.json';
+import KeyMap from '../json/keymap/keymap.json';
 
 export default {
   data() {
@@ -289,11 +289,14 @@ export default {
       const newResult = []; //  중복이 제거된 키 맵(key: index)
 
       settedContainer.forEach((element, index) => {
-        if (element.includes("${$lang.message_")) {
-          element = keyMap[index];
-        } else {
-          element = element;
+        if (element) {
+          if (element.includes("${$lang.message_")) {
+            element = keyMap[index];
+          } else {
+            element = element;
+          }
         }
+        
         newResult.push(element);
       })
 
